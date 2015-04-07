@@ -52,13 +52,11 @@
          ,calc_earth_distance/2
         ]).
 
-%% floor/2
-%% -----------------------------------------------------------
+
 %% @doc 向下取整
 -spec floor(X) -> FloorX when
     X :: integer(),
     FloorX :: integer().
-%% -----------------------------------------------------------
 floor(X) ->
     Tmp = erlang:trunc(X),
     case X < Tmp of
@@ -66,13 +64,10 @@ floor(X) ->
         false -> Tmp
     end.
 
-%% ceil/2
-%% -----------------------------------------------------------
 %% @doc 向上取整
 -spec ceil(X) -> CeilX when
     X :: integer(),
     CeilX :: integer().
-%% -----------------------------------------------------------
 ceil(X) ->
     Tmp = erlang:trunc(X),
     case X > Tmp of
@@ -80,28 +75,20 @@ ceil(X) ->
         false -> Tmp
     end.
     
-%% at_least/2
-%% -----------------------------------------------------------
 %% @doc 最小值限制
 -spec at_least(Val :: number(), Min :: number()) -> Result :: number().
-%% -----------------------------------------------------------
 at_least(Val, Min) ->
     erlang:max(Val, Min).
 
-%% at_most/2
-%% -----------------------------------------------------------
 %% @doc 最大值限制
 -spec at_most(Val :: number(), Max :: number()) -> Result :: number().
-%% -----------------------------------------------------------
 at_most(Val, Max) ->
     erlang:min(Val, Max).
 
-%% check_range/3
-%% -----------------------------------------------------------
 %% @doc 做取值范围限制
 -spec check_range(Val :: number(), Min :: number(), Max :: number()) -> Result :: number().
-%% -----------------------------------------------------------
-check_range(_Val, Min, Max) when Min > Max -> ?TYPE_ERROR("the value of Min is more than Max, Min/Max : ~w/~w", [Min, Max]);
+check_range(_Val, Min, Max) when Min > Max -> 
+    ?TYPE_ERROR("the value of Min is more than Max, Min/Max : ~w/~w", [Min, Max]);
 check_range(Val, Min, Max) ->
     if
         Val > Max -> Max;
@@ -109,8 +96,6 @@ check_range(Val, Min, Max) ->
         true -> Val
     end.
     
-%% seconds_to_datetime/1
-%% -----------------------------------------------------------
 %% @doc 将unix时间戳转换成当地日期时间
 -spec seconds_to_datetime(UnixTime) -> {{Year, Month, Day}, {Hour, Minute, Second}} when
     UnixTime :: integer(),
@@ -120,30 +105,23 @@ check_range(Val, Min, Max) ->
     Hour :: integer(),
     Minute :: integer(),
     Second :: integer().
-%% -----------------------------------------------------------
 seconds_to_datetime(Unixtime) ->
     Local = erlang:universaltime_to_localtime({{1970, 1, 1}, {0, 0, 0}}),
     LocalStamp = calendar:datetime_to_gregorian_seconds(Local),
     TimeStamp = Unixtime + LocalStamp,
     calendar:gregorian_seconds_to_datetime(TimeStamp).
 
-%% unixtime/0
-%% -----------------------------------------------------------
 %% @doc 当前的unix时间戳(s)
 -spec unixtime() -> Second when
     Second :: integer().
-%% -----------------------------------------------------------
 unixtime() ->
     {M, S, _} = erlang:now(),
     M * 1000000 + S.
 
-%% unixtime/1
-%% -----------------------------------------------------------
 %% @doc 根据传入不同的type，返回不同的时间戳(s)
 -spec unixtime(Type) -> Second when
     Type :: atom(),
     Second :: integer().
-%% -----------------------------------------------------------
 unixtime(ms) ->
     {S1, S2, S3} = erlang:now(),
     trunc(S1 * 1000000000 + S2 * 1000 + S3 / 1000);
@@ -250,8 +228,6 @@ unixtime({nextweektime, UnixTime, {WeekDay, HH, MM, SS}}) when WeekDay >= 1 anda
             WeekTime + ?ONE_WEEK_SECONDS
     end.
 
-%% datetime_to_seconds/1
-%% -----------------------------------------------------------
 %% @doc 将日期转换unix时间戳
 %% DateTime = {{2014,5,20},{16,14,57}} = {{Y, M, D}, {h, m, s}} 
 %% 719528 * 24 * 3600 ==  calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}) .
@@ -263,7 +239,6 @@ unixtime({nextweektime, UnixTime, {WeekDay, HH, MM, SS}}) when WeekDay >= 1 anda
     Hour :: integer(),
     Minute :: integer(),
     Second :: integer().
-%% -----------------------------------------------------------
 datetime_to_seconds(0) -> 0;
 datetime_to_seconds({Year,Month,Day,Hour,Minute,Second}) ->
     datetime_to_seconds({{Year, Month, Day}, {Hour, Minute, Second}});
@@ -276,8 +251,6 @@ datetime_to_seconds(DateTime = {{_Year, _Month, _Day}, {_Hour, _Minute, _Second}
             calendar:datetime_to_gregorian_seconds(Udate) - ?ZERO_TO_1970_DAYS * 24 * 3600
     end.
 
-%% is_same_day/2
-%% -----------------------------------------------------------
 %% @doc 判断两个时间戳是否是同一天
 -spec is_same_day(TimeOne, TimeTwo) -> Result when
     TimeOne :: integer() | {{Year, Month, Day}, {Hour, Minute, Second}},
@@ -289,7 +262,6 @@ datetime_to_seconds(DateTime = {{_Year, _Month, _Day}, {_Hour, _Minute, _Second}
     Minute :: integer(),
     Second :: integer(),
     Result :: boolean().
-%% -----------------------------------------------------------
 is_same_day(TimeOne, TimeTwo) when is_integer(TimeOne) andalso is_integer(TimeTwo) ->
     Day1 = tools:unixtime({today, TimeOne}),
     Day2 = tools:unixtime({today, TimeTwo}),
@@ -302,51 +274,36 @@ is_same_day(TimeStamp1 = {_,_,_}, TimeStamp2 = {_, _, _}) ->
     end;
 is_same_day(_,_) -> false.
 
-%% is_today/1
-%% -----------------------------------------------------------
 %% @doc 判断是否是今天的时间戳
 -spec is_today(UnixTime :: integer()) -> Result :: boolean().
-%% -----------------------------------------------------------
 is_today(Time) ->
     Now = util:unixtime(),
     is_same_day(Time, Now).
 
-%% day_of_the_week/0
-%% -----------------------------------------------------------
 %% @doc 判断今天周几
 -spec day_of_the_week() -> Date :: integer().
-%% -----------------------------------------------------------
 day_of_the_week() ->
     calendar:day_of_the_week(date()).
 
-%% day_of_the_week/1
-%% -----------------------------------------------------------
 %% @doc 判断对应的时间戳是周几
 -spec day_of_the_week(UnixTime :: integer()) -> Date :: integer().
-%% -----------------------------------------------------------
 day_of_the_week(UnixTime) ->
     Now = unixtime_to_now(UnixTime),
     {Date, _Time} = calendar:now_to_local_time(Now),
     calendar:day_of_the_week(Date).
 
-%% unixtime_to_now/1
-%% -----------------------------------------------------------
 %% @doc UnixTime时间戳转换成erlang:now()格式(模糊时间)
 -spec unixtime_to_now(UnixTime :: integer()) -> {MegaSeconds :: integer(), Seconds :: integer(), 0}.
-%% -----------------------------------------------------------
 unixtime_to_now(UnixTime) ->
     MegaSeconds = UnixTime div 1000000,
     Seconds = UnixTime rem 1000000,
     {MegaSeconds, Seconds, 0}.
 
-%% rand/2
-%% -----------------------------------------------------------
 %% @doc 产生一个介于Min到Max之间的随机整数
 -spec rand(Min, Max) -> Random | type_error() when
     Min :: integer(),
     Max :: integer(),
     Random :: integer().
-%% -----------------------------------------------------------
 rand(Min, Min) -> Min;
 rand(Min, Max) when Min > Max -> ?TYPE_ERROR("params error:Max > Min", [Min, Max]);
 rand(Min, Max) ->
@@ -361,27 +318,21 @@ rand(Min, Max) ->
     M = Min - 1,
     random:uniform(Max - M) + M.
 
-%% rand_list/1
-%% -----------------------------------------------------------
 %% @doc 从一个list中随机取出一项
 -spec rand_list(List) -> Result when
     List :: list(),
     Result :: term() | type_error().
-%% -----------------------------------------------------------
 rand_list([]) -> ?TYPE_ERROR("rand list is empty", []);
 rand_list([Elem]) -> Elem;
 rand_list(List) ->
     Len = length(List),
     rand_list(Len, List).
 
-%% get_rand_list/2
-%% -----------------------------------------------------------
 %% @doc 从列表中不重复选择N个元素，返回选中元素构成的新列表,当N>=length(List)时，只能返回长度为N的list
 -spec get_rand_list(N, List) -> RandList when
     N :: integer(),
     List :: list(),
     RandList :: list().
-%% -----------------------------------------------------------
 get_rand_list(0, _List) -> [];
 get_rand_list(N, List) ->
     Len = length(List),
@@ -396,15 +347,12 @@ get_rand_list(N, Len, List, RandList) ->
     get_rand_list(N-1, Len-1, lists:delete(Elem, List), [Elem|RandList]).
 
 
-%% nth_replace/3
-%% -----------------------------------------------------------
 %% @doc 替换list中的第N个元素
 -spec nth_replace(List, Nth, NewVal) -> NewList  | type_error() when
     List :: list(),
     Nth :: integer(),
     NewVal :: term(),
     NewList :: list().
-%% -----------------------------------------------------------
 nth_replace(List, Nth, NewVal) when Nth > 0 ->
     Len = length(List),
     case Len < Nth of
@@ -419,19 +367,14 @@ nth_replace([_Elem|Tail], Nth, NewVal, ReverseList, Nth) ->
 nth_replace([Elem|Tail], Nth, NewVal, ReverseList, Count) ->
     nth_replace(Tail, Nth, NewVal, [Elem|ReverseList], Count+1).
 
-%% suffle_list/1
-%% -----------------------------------------------------------
 %% @doc 随机返回一个乱序的list
 -spec suffle_list(List :: list()) -> NList :: list().
-%% -----------------------------------------------------------
 suffle_list(List) ->
     RandMax = length(List) * 10,
     TmpList = [{rand(0, RandMax), X} || X <- List],
     SortList = lists:keysort(1, TmpList),
     [E || {_, E} <- SortList].
 
-%% rand_by_weight/2
-%% -----------------------------------------------------------
 %% @doc 根据权重列表随机对应的elem，循环Count次
 -spec rand_by_weight(Count, List) -> ResultList when
     Count :: integer(),
@@ -440,7 +383,6 @@ suffle_list(List) ->
     Weight :: integer(),
     Id :: integer(),
     Num :: integer().
-%% -----------------------------------------------------------
 rand_by_weight(0, _List) -> [];
 rand_by_weight(_Count, []) -> [];
 rand_by_weight(Count, List) -> do_rand_by_weight(Count, List).
@@ -486,47 +428,32 @@ find_weight(List, Left, Right, WNum) ->
             find_weight(List, Middle + 1, Right, WNum)
     end.
 
-%% delete_list/2
-%% -----------------------------------------------------------
 %% @doc 把List1从List2中全部删除掉，返回一个新的不包含List1的任何一个元素的list
 -spec delete_list(List1 :: list(), List2 :: list()) -> NList :: list().
- %% -----------------------------------------------------------
 delete_list([], List2) -> List2;
 delete_list(_List1 = [Elem|Tail], List2) ->
     delete_list(Tail, lists:delete(Elem, List2)).
 
-%% index_of/2
-%% -----------------------------------------------------------
 %% @doc 元素位于列表中的位置，从1开始;没有找到的话返回0
 -spec index_of(List :: list(), Elem :: term()) -> Index :: 0 | integer().
-%% -----------------------------------------------------------
 index_of(List, Elem) ->
     string:str(List, [Elem]).
 
-%% md5/1
-%% -----------------------------------------------------------
 %% @doc 生成16位格式的md5值
 -spec md5(String :: list()) -> Md5Bin :: binary().
-%% -----------------------------------------------------------
 md5(String) ->
     list_to_binary([io_lib:format("~2.16.0b",[N]) || N <- binary_to_list(erlang:md5(String))]).
 
-%% ip2bitstring/1
-%% -----------------------------------------------------------
 %% @doc IP值转换成bitstring
 -spec ip2bitstring({N1 :: integer(), N2 :: integer(), N3 :: integer(), N4 :: integer()}) -> IpBitString :: bitstring().
-%% -----------------------------------------------------------
 ip2bitstring({N1, N2, N3, N4}) ->
     erlang:list_to_bitstring(integer_to_list(N1) ++ "." ++ integer_to_list(N2) ++ "." ++ integer_to_list(N3) ++ "." ++ integer_to_list(N4));
 ip2bitstring(_) -> <<"">>.
 
 ip2bitstring(N1, N2, N3, N4) -> ip2bitstring({N1, N2, N3, N4}).
 
-%% merge_kv/1
-%% -----------------------------------------------------------
 %% @doc 合并相同的键值对
 -spec merge_kv(List :: list({Key :: term(), Val :: integer()})) -> MergeList :: list().
-%% -----------------------------------------------------------
 merge_kv(List) ->
     merge_kv(List, []).
 merge_kv([], RTList) -> RTList;
@@ -538,8 +465,6 @@ merge_kv([{Key, Val1}|Tail], RTList) ->
             merge_kv(Tail, [{Key, Val1 + Val2}|TailRTList])
     end.
 
-%% calc_earth_distance/2
-%% -----------------------------------------------------------
 %% @doc 计算两个经纬度之间的距离 Lon1 第一点的精度 Lat1 第一点的纬度 Lon2 第二点的精度 Lat2 第二点的纬度
 -spec calc_earth_distance({Lon1, Lat1}, {Lon2, Lat2}) -> Distance when
     Lon1 :: float(),
@@ -547,7 +472,6 @@ merge_kv([{Key, Val1}|Tail], RTList) ->
     Lon2 :: float(),
     Lat2 :: float(),
     Distance :: float().
-%% -----------------------------------------------------------
 calc_earth_distance({Lon1, Lat1}, {Lon2, Lat2}) ->
     EARTH_RADIUS = 6378137, %%赤道半径,单位米
     A = rad(Lat1) - rad(Lat2),
