@@ -17,6 +17,7 @@
          ,int_ceil/1
          ,int_pow/2
          ,count_char_nums/1
+         ,str_to_BIN/1
         ]).
 
 
@@ -105,6 +106,11 @@ count_char_nums([E|Tail], EnNum, ZhNum) when E >= 16#4e00 andalso E =< 16#9fff -
     count_char_nums(Tail, EnNum, ZhNum + 1);
 count_char_nums([_E|Tail], EnNum, ZhNum) -> 
     count_char_nums(Tail, EnNum, ZhNum).
+
+%% @doc 把字符转成二进制格式输出
+-spec str_to_BIN(Str :: list()) -> Bin :: list().
+str_to_BIN(Str) ->
+    lists:concat([erlang:integer_to_list(Item, 2) || Item <- Str]).
 
 %% ====================================================================
 %% Internal functions
