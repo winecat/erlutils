@@ -4,6 +4,8 @@
 
 -module(user_default).
 
+-define(TEST, true).%% test true
+
 %% ====================================================================
 %% API functions
 %% ====================================================================
@@ -14,6 +16,7 @@
          ,get_code/1
          ,int_ceil/1
          ,int_pow/2
+         ,count_char_nums/1
         ]).
 
 
@@ -90,8 +93,28 @@ int_pow(X, N, R) when N < 2 ->
 int_pow(X, N, R) ->
     int_pow(X * X, N bsr 1, case N band 1 of 1 -> R * X; 0 -> R end).
 
+%% @doc 统计一段文字里的中文和字符个数
+-spec count_char_nums(String :: string()) -> {EnNum :: integer(), ZhNum :: integer()}. 
+count_char_nums(String) ->
+    List = unicode:characters_to_list(list_to_binary(String)),
+    count_char_nums(List, 0, 0).
+count_char_nums([], EnNum, ZhNum) -> {EnNum, ZhNum};
+count_char_nums([E|Tail], EnNum, ZhNum) when E =< 255 -> 
+    count_char_nums(Tail, EnNum + 1, ZhNum);
+count_char_nums([E|Tail], EnNum, ZhNum) when E >= 16#4e00 andalso E =< 16#9fff -> 
+    count_char_nums(Tail, EnNum, ZhNum + 1);
+count_char_nums([_E|Tail], EnNum, ZhNum) -> 
+    count_char_nums(Tail, EnNum, ZhNum).
+
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
+count_char_nums_test() ->
+    A = "haha哈哈唔知abd",
+    ?assertEqual({7, 4}, count_char_nums(A)).
+
+-endif.
 
