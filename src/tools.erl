@@ -108,10 +108,8 @@ check_range(Val, Min, Max) ->
     Minute :: integer(),
     Second :: integer().
 seconds_to_datetime(Unixtime) ->
-    Local = erlang:universaltime_to_localtime({{1970, 1, 1}, {0, 0, 0}}),
-    LocalStamp = calendar:datetime_to_gregorian_seconds(Local),
-    TimeStamp = Unixtime + LocalStamp,
-    calendar:gregorian_seconds_to_datetime(TimeStamp).
+    Now = unixtime_to_now(Unixtime),
+    calendar:now_to_local_time(Now).
 
 %% @doc 当前的unix时间戳(s)
 -spec unixtime() -> Second when
@@ -141,7 +139,7 @@ unixtime(nexthour) ->
 %% @doc 获取当天0时0分0秒的时间戳（这里是相对于当前时区而言，后面的unixtime调用都基于这个函数)
 unixtime(today) ->
     {M, S, MS} = now(),
-    {_, Time} = calendar:now_to_local_time({M, S, MS}), %% 性能几乎和之前的一样
+    {_, Time} = calendar:now_to_local_time({M, S, MS}), 
     M * 1000000 + S - calendar:time_to_seconds(Time);
 
 %% @doc 获取明天0时0分0秒的时间戳（这里是相对于当前时区而言)
@@ -154,10 +152,7 @@ unixtime(yesterday) ->
 
 %% @doc 获取本周周一00:00:00的时间戳
 unixtime(thisweek) ->
-    {Date, _} = calendar:local_time(),
-    Week = calendar:day_of_the_week(Date),
-    Today = unixtime(today),
-    Today - (Week - 1) * ?ONE_DAY_SECONDS;
+    unixtime({thisweek, util:unixtime()});
 
 %% @doc 获取某时间戳的00:00:00的时间戳当Unixtime为0时，返回值有可能是负值，因为这里有时区偏移值（例如北京时间就可能是-28800
 unixtime({today, Unixtime}) ->
@@ -177,8 +172,7 @@ unixtime({yesterday, UnixTime}) ->
 
 %% @doc 获取某时间戳所在周的周一00:00:00的时间戳
 unixtime({thisweek, UnixTime}) ->
-    {Date, _} = tools:seconds_to_datetime(UnixTime),
-    Week = calendar:day_of_the_week(Date),
+    Week = day_of_the_week(UnixTime),
     Today = unixtime({today, UnixTime}),
     Today - (Week - 1) * ?ONE_DAY_SECONDS;
 
